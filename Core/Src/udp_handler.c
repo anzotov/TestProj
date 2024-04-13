@@ -50,10 +50,6 @@ err_t udp_send_msg(struct udp_pcb* upcb, const char* data)
 
 		// отсылаем пакет
 		err = udp_send(upcb, p);
-		if (ERR_OK != err)
-		{
-			break;
-		}
 	} while(0);
 	// очищаем аллоцированную память
 	pbuf_free(p);

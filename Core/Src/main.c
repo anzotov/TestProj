@@ -111,9 +111,6 @@ int main(void)
   ip4_addr_t ip_addr;
   IP4_ADDR(&ip_addr, 192, 168, 0, 11);
   upcb = udp_create_socket(ip_addr, 3333, udp_receive_callback, NULL);
-  if(upcb == NULL) {
-	  return 1;
-  }
   HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
