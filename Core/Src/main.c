@@ -362,6 +362,7 @@ static void udp_receive_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 {
 	// в этой функции обязательно должны очистить p, иначе память потечёт
 	pbuf_free(p);
+	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
 }
 /* USER CODE END 4 */
 
