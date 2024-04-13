@@ -48,7 +48,7 @@ UART_HandleTypeDef huart3;
 
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
-struct udp_pcb* upcb;
+static struct udp_pcb* upcb;
 
 /* USER CODE BEGIN PV */
 
