@@ -27,34 +27,35 @@ struct udp_pcb* udp_create_socket(const ip4_addr_t ip_addr, const u16_t port, ud
 
 err_t udp_send_msg(struct udp_pcb* upcb, const char* data)
 {
+	err_t err = ERR_ABRT;
 	// если сокет не создался, то на выход с ошибкой
 	if (upcb == NULL)
 	{
-		return ERR_ABRT;
+		return err;
 	}
 	// аллоцируем память под буфер с данными
 	struct pbuf* p = pbuf_alloc(PBUF_TRANSPORT, strlen(data)+1, PBUF_RAM);
-	if (p != NULL)
+	if (p == NULL)
+	{
+		return err;
+	}
+	do
 	{
 		// кладём данные в аллоцированный буфер
-		err_t err = pbuf_take(p, data, strlen(data)+1);
+		err = pbuf_take(p, data, strlen(data)+1);
 		if (ERR_OK != err)
 		{
-			// обязательно должны очистить аллоцированную память при ошибке
-			pbuf_free(p);
-			return err;
+			break;
 		}
 
 		// отсылаем пакет
 		err = udp_send(upcb, p);
 		if (ERR_OK != err)
 		{
-			// обязательно должны очистить аллоцированную память при ошибке
-			pbuf_free(p);
-			return err;
+			break;
 		}
-		// очищаем аллоцированную память
-		pbuf_free(p);
-	}
-	return ERR_OK;
+	} while(0);
+	// очищаем аллоцированную память
+	pbuf_free(p);
+	return err;
 }
