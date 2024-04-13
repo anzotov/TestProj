@@ -48,6 +48,8 @@ UART_HandleTypeDef huart3;
 
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
+struct udp_pcb* upcb;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -58,6 +60,8 @@ static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_TIM2_Init(void);
+static void udp_receive_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
+	    const ip_addr_t *addr, u16_t port);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -67,7 +71,7 @@ static void MX_TIM2_Init(void);
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
 {
   // отправляем пакет раз в секунду
-	udp_send_msg();
+	udp_send_msg(upcb, "Test");
 }
 /* USER CODE END 0 */
 
@@ -104,7 +108,12 @@ int main(void)
   MX_TIM2_Init();
   MX_LWIP_Init();
   /* USER CODE BEGIN 2 */
-  udp_create_socket();
+  ip4_addr_t ip_addr;
+  IP4_ADDR(&ip_addr, 192, 168, 0, 11);
+  upcb = udp_create_socket(ip_addr, 3333, udp_receive_callback, NULL);
+  if(upcb == NULL) {
+	  return 1;
+  }
   HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
@@ -348,7 +357,12 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+static void udp_receive_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
+	    const ip_addr_t *addr, u16_t port)
+{
+	// в этой функции обязательно должны очистить p, иначе память потечёт
+	pbuf_free(p);
+}
 /* USER CODE END 4 */
 
 /**
