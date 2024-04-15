@@ -13,7 +13,7 @@ struct udp_pcb* udp_create_socket(const ip4_addr_t ip_addr, const u16_t port, ud
 	}
 
 	// коннектимся к удаленному серверу по ИП и порту (сервер должен быть настроен именно на так)
-	err_t err = udp_connect(upcb, &ip_addr, 3333);
+	err_t err = udp_connect(upcb, &ip_addr, port);
 	if (ERR_OK != err)
 	{
 		udp_remove(upcb);
