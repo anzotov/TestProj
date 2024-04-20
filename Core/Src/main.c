@@ -68,10 +68,34 @@ static void udp_receive_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
+struct TickCount
 {
-  // отправляем пакет раз в секунду
-	udp_send_msg(upcb, "Test");
+	int m_1ms;
+	int m_10ms;
+	int m_100ms;
+	int m_1s;
+	uint32_t cnt;
+};
+
+struct TickCount tc = {0};
+
+void tick_count_handler()
+{
+	++tc.cnt;
+	tc.m_1ms = 1;
+	if(tc.cnt % 10 == 0)
+	{
+		tc.m_10ms = 1;
+	}
+	if(tc.cnt % 100 == 0)
+	{
+		tc.m_100ms = 1;
+	}
+	if(tc.cnt % 1000 == 0)
+	{
+		tc.m_1s = 1;
+		tc.cnt = 0;
+	}
 }
 /* USER CODE END 0 */
 
@@ -121,7 +145,17 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  MX_LWIP_Process();
+	  if(tc.m_1ms)
+	  {
+		  tc.m_1ms = 0;
+		  MX_LWIP_Process();
+	  }
+	  if(tc.m_1s)
+	  {
+		  tc.m_1s = 0;
+		  // отправляем пакет раз в секунду
+		  udp_send_msg(upcb, "Test");
+	  }
   }
   /* USER CODE END 3 */
 }
