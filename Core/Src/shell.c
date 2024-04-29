@@ -156,7 +156,6 @@ char* shell_execute_mut(char* input_mut, int input_size)
   char* tokens[SHELL_MAX_TOKENS] = {NULL};
   tokenize(input_mut, tokens, sizeof(tokens)/sizeof(tokens[0]));
 
-  char *output = NULL;
   const ShellFnMap map[] = 
   {
     {"ifconfig", &ifconfig},
@@ -167,11 +166,10 @@ char* shell_execute_mut(char* input_mut, int input_size)
   {
     if(strcmp(map[i].cmd, tokens[0]) == 0)
     {
-      output = map[i].func(tokens, sizeof(tokens)/sizeof(tokens[0]));
-      break;
+      return map[i].func(tokens, sizeof(tokens)/sizeof(tokens[0]));
     }
   }
-  return output;
+  return print("Unknown command");
 }
 
 char* shell_execute(const char* input, int input_size)
