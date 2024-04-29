@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-struct udp_pcb* udp_create_socket(const ip4_addr_t ip_addr, const u16_t port, udp_recv_fn recv, void *recv_arg)
+struct udp_pcb* udp_create_socket(const u16_t port, udp_recv_fn recv, void *recv_arg)
 {
 	// создание сокета
 	struct udp_pcb* upcb = udp_new();
@@ -12,8 +12,7 @@ struct udp_pcb* udp_create_socket(const ip4_addr_t ip_addr, const u16_t port, ud
 		return upcb;
 	}
 
-	// коннектимся к удаленному серверу по ИП и порту (сервер должен быть настроен именно на так)
-	err_t err = udp_connect(upcb, &ip_addr, port);
+	err_t err = udp_bind(upcb, IP_ANY_TYPE, port);
 	if (ERR_OK != err)
 	{
 		udp_remove(upcb);
@@ -25,7 +24,7 @@ struct udp_pcb* udp_create_socket(const ip4_addr_t ip_addr, const u16_t port, ud
 	return upcb;
 }
 
-err_t udp_send_msg(struct udp_pcb* upcb, const char* data)
+err_t udp_send_msg(struct udp_pcb* upcb, const char* data, const ip_addr_t* dst_ip, u16_t dst_port)
 {
 	err_t err = ERR_ABRT;
 	// если сокет не создался, то на выход с ошибкой
@@ -49,7 +48,7 @@ err_t udp_send_msg(struct udp_pcb* upcb, const char* data)
 		}
 
 		// отсылаем пакет
-		err = udp_send(upcb, p);
+		err = udp_sendto(upcb, p, dst_ip, dst_port);
 	} while(0);
 	// очищаем аллоцированную память
 	pbuf_free(p);

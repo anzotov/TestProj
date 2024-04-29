@@ -22,7 +22,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "shell.h"
 #include "udp_handler.h"
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -132,10 +134,7 @@ int main(void)
   MX_TIM2_Init();
   MX_LWIP_Init();
   /* USER CODE BEGIN 2 */
-  ip4_addr_t ip_addr;
-  IP4_ADDR(&ip_addr, 192, 168, 0, 11);
-  upcb = udp_create_socket(ip_addr, 3333, udp_receive_callback, NULL);
-  HAL_TIM_Base_Start_IT(&htim2);
+  upcb = udp_create_socket(3333, udp_receive_callback, NULL);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -149,12 +148,6 @@ int main(void)
 	  {
 		  tc.m_1ms = 0;
 		  MX_LWIP_Process();
-	  }
-	  if(tc.m_1s)
-	  {
-		  tc.m_1s = 0;
-		  // отправляем пакет раз в секунду
-		  udp_send_msg(upcb, "Test");
 	  }
   }
   /* USER CODE END 3 */
@@ -391,9 +384,29 @@ static void MX_GPIO_Init(void)
 static void udp_receive_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 	    const ip_addr_t *addr, u16_t port)
 {
+  int input_size = p->tot_len + 1;
+  char* input = malloc(input_size);
+  do
+  {
+    if(input == NULL)
+    {
+      break;
+    }
+    memset(input, 0, input_size);
+    if(pbuf_copy_partial(p, input, p->tot_len, 0) == 0)
+    {
+      break;
+    }
+    char* output = shell_execute_mut(input, input_size);
+    if(output != NULL)
+    {
+      udp_send_msg(pcb, output, addr, port);
+    }
+    free(output);
+  } while(0);
+  free(input);
 	// в этой функции обязательно должны очистить p, иначе память потечёт
 	pbuf_free(p);
-	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
 }
 /* USER CODE END 4 */
 
