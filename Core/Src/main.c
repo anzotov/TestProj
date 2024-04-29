@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "shell.h"
 #include "udp_handler.h"
+#include "tcp_handler.h"
 #include "string.h"
 /* USER CODE END Includes */
 
@@ -51,6 +52,7 @@ UART_HandleTypeDef huart3;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 static struct udp_pcb* upcb = NULL;
+static struct tcp_pcb* tpcb = NULL;
 
 /* USER CODE BEGIN PV */
 
@@ -64,6 +66,8 @@ static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_TIM2_Init(void);
 static void udp_receive_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 	    const ip_addr_t *addr, u16_t port);
+static err_t tcp_accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err);
+static err_t tcp_receive_callback(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -135,6 +139,7 @@ int main(void)
   MX_LWIP_Init();
   /* USER CODE BEGIN 2 */
   upcb = udp_create_socket(3333, udp_receive_callback, NULL);
+  tpcb = tcp_create_socket(3333, tcp_accept_callback);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -407,6 +412,41 @@ static void udp_receive_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
   free(input);
 	// в этой функции обязательно должны очистить p, иначе память потечёт
 	pbuf_free(p);
+}
+
+static err_t tcp_accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err)
+{
+	tcp_recv(newpcb, tcp_receive_callback);
+  return ERR_OK;
+}
+
+static err_t tcp_receive_callback(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
+{
+  int input_size = p->tot_len + 1;
+  char* input = malloc(input_size);
+  do
+  {
+    if(input == NULL)
+    {
+      break;
+    }
+    memset(input, 0, input_size);
+    if(pbuf_copy_partial(p, input, p->tot_len, 0) == 0)
+    {
+      break;
+    }
+    tcp_recved(tpcb, p->tot_len);
+    char* output = shell_execute_mut(input, input_size);
+    if(output != NULL)
+    {
+      tcp_send_msg(pcb, output);
+    }
+    free(output);
+  } while(0);
+  free(input);
+	// в этой функции обязательно должны очистить p, иначе память потечёт
+	pbuf_free(p);
+  return ERR_OK;
 }
 /* USER CODE END 4 */
 
