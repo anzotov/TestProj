@@ -441,6 +441,7 @@ static err_t tcp_receive_callback(void *arg, struct tcp_pcb *pcb, struct pbuf *p
   if(p == NULL)
   {
     free(arg);
+    tcp_close(pcb);
     return ERR_OK;
   }
 
