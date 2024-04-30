@@ -51,10 +51,10 @@ UART_HandleTypeDef huart3;
 
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
+/* USER CODE BEGIN PV */
+
 static struct udp_pcb* upcb = NULL;
 static struct tcp_pcb* tpcb = NULL;
-
-/* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
 
@@ -74,6 +74,13 @@ static err_t tcp_receive_callback(void *arg, struct tcp_pcb *pcb, struct pbuf *p
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+typedef struct tcp_buffer_t
+{
+  char* buf;
+  size_t size;
+  size_t offset;
+} TcpBuffer;
+
 struct TickCount
 {
 	int m_1ms;
@@ -416,36 +423,65 @@ static void udp_receive_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 
 static err_t tcp_accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err)
 {
+  TcpBuffer* buffer = malloc(sizeof(TcpBuffer));
+  if(buffer == NULL)
+  {
+    tcp_abort(newpcb);
+    return ERR_ABRT;
+  }
+  *buffer = (TcpBuffer) {NULL};
 	tcp_recv(newpcb, tcp_receive_callback);
+  tcp_arg(newpcb, buffer);
   return ERR_OK;
 }
 
 static err_t tcp_receive_callback(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 {
-  int input_size = p->tot_len + 1;
-  char* input = malloc(input_size);
+  TcpBuffer* buffer = (TcpBuffer*)arg;
+  if(p == NULL)
+  {
+    free(arg);
+    return ERR_OK;
+  }
+
   do
   {
-    if(input == NULL)
+    const size_t data_sz = buffer->offset + p->tot_len;
+    if(data_sz == 0)
+      break;
+
+    if(buffer->size < data_sz)
+    {
+      buffer->buf = realloc(buffer->buf, data_sz);
+      buffer->size = data_sz;
+    }
+    if(buffer->buf == NULL)
+      break;
+
+    size_t data_copied = pbuf_copy_partial(p, buffer->buf + buffer->offset, p->tot_len, 0);
+    if(data_copied == 0)
     {
       break;
     }
-    memset(input, 0, input_size);
-    if(pbuf_copy_partial(p, input, p->tot_len, 0) == 0)
+    if(buffer->buf[buffer->offset + data_copied - 1] != 0)
     {
+      buffer->offset += data_copied;
       break;
     }
-    tcp_recved(tpcb, p->tot_len);
-    char* output = shell_execute_mut(input, input_size);
+
+    char* output = shell_execute_mut(buffer->buf, buffer->offset + data_copied);
+    buffer->offset = 0;
+
     if(output != NULL)
     {
       tcp_send_msg(pcb, output);
     }
     free(output);
   } while(0);
-  free(input);
-	// в этой функции обязательно должны очистить p, иначе память потечёт
-	pbuf_free(p);
+  // в этой функции обязательно должны очистить p, иначе память потечёт
+  pbuf_free(p);
+  tcp_recved(tpcb, p->tot_len);
+
   return ERR_OK;
 }
 /* USER CODE END 4 */
