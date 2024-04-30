@@ -65,7 +65,7 @@ static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_TIM2_Init(void);
 static void udp_receive_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
-	    const ip_addr_t *addr, u16_t port);
+      const ip_addr_t *addr, u16_t port);
 static err_t tcp_accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err);
 static err_t tcp_receive_callback(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err);
 /* USER CODE BEGIN PFP */
@@ -83,32 +83,32 @@ typedef struct tcp_buffer_t
 
 struct TickCount
 {
-	int m_1ms;
-	int m_10ms;
-	int m_100ms;
-	int m_1s;
-	uint32_t cnt;
+  int m_1ms;
+  int m_10ms;
+  int m_100ms;
+  int m_1s;
+  uint32_t cnt;
 };
 
 struct TickCount tc = {0};
 
 void tick_count_handler()
 {
-	++tc.cnt;
-	tc.m_1ms = 1;
-	if(tc.cnt % 10 == 0)
-	{
-		tc.m_10ms = 1;
-	}
-	if(tc.cnt % 100 == 0)
-	{
-		tc.m_100ms = 1;
-	}
-	if(tc.cnt % 1000 == 0)
-	{
-		tc.m_1s = 1;
-		tc.cnt = 0;
-	}
+  ++tc.cnt;
+  tc.m_1ms = 1;
+  if(tc.cnt % 10 == 0)
+  {
+    tc.m_10ms = 1;
+  }
+  if(tc.cnt % 100 == 0)
+  {
+    tc.m_100ms = 1;
+  }
+  if(tc.cnt % 1000 == 0)
+  {
+    tc.m_1s = 1;
+    tc.cnt = 0;
+  }
 }
 /* USER CODE END 0 */
 
@@ -156,11 +156,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  if(tc.m_1ms)
-	  {
-		  tc.m_1ms = 0;
-		  MX_LWIP_Process();
-	  }
+    if(tc.m_1ms)
+    {
+      tc.m_1ms = 0;
+      MX_LWIP_Process();
+    }
   }
   /* USER CODE END 3 */
 }
@@ -394,7 +394,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 static void udp_receive_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
-	    const ip_addr_t *addr, u16_t port)
+      const ip_addr_t *addr, u16_t port)
 {
   int input_size = p->tot_len + 1;
   char* input = malloc(input_size);
@@ -417,8 +417,8 @@ static void udp_receive_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
     free(output);
   } while(0);
   free(input);
-	// в этой функции обязательно должны очистить p, иначе память потечёт
-	pbuf_free(p);
+  // в этой функции обязательно должны очистить p, иначе память потечёт
+  pbuf_free(p);
 }
 
 static err_t tcp_accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err)
@@ -430,7 +430,7 @@ static err_t tcp_accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err)
     return ERR_ABRT;
   }
   *buffer = (TcpBuffer) {NULL};
-	tcp_recv(newpcb, tcp_receive_callback);
+  tcp_recv(newpcb, tcp_receive_callback);
   tcp_arg(newpcb, buffer);
   return ERR_OK;
 }
