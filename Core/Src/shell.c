@@ -75,7 +75,7 @@ char *shell_execute_mut(char *input_mut, int input_size)
 
 static char *ifconfig(char **tokens, int max_tokens)
 {
-  struct netif *gnetif = netif_find("st");
+  const struct netif *gnetif = netif_find("st");
 
   return gnetif == NULL ? print("ifconfig error!")
                         : print("IP: %u.%u.%u.%u, MASK: %u.%u.%u.%u, GATEWAY: %u.%u.%u.%u",
@@ -158,8 +158,8 @@ static void tokenize(char *input, char **tokens, int max_tokens)
 
 static char *join(const char *restrict delim, char **strings, int strings_sz)
 {
+  const int delim_len = strlen(delim);
   int result_sz = 1;
-  int delim_len = strlen(delim);
   for (int i = 0; i < strings_sz; ++i)
   {
     if (strings[i] == NULL)

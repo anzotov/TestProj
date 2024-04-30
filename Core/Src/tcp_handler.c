@@ -37,7 +37,7 @@ err_t tcp_send_msg(struct tcp_pcb* tpcb, const char* data)
 		return err;
 	}
 	// отсылаем пакет
-	err = tcp_write(tpcb, data, strlen(data), 0);
+	err = tcp_write(tpcb, data, strlen(data)+1, 0);
 	if (ERR_OK == err)
 	{
 		err = tcp_output(tpcb);
